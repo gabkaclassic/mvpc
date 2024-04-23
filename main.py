@@ -1,6 +1,7 @@
 from uvicorn import run as run_uvicorn
 from setup import node_type
 
+
 def main():
 
     if node_type == "panel":
@@ -8,9 +9,12 @@ def main():
             app_host as host,
             app_port as port,
             app_reload as reload,
-            workers
+            workers,
         )
-        run_uvicorn('web.web_app:app', host=host, port=port, reload=reload, workers=workers)
+
+        run_uvicorn(
+            "web.web_app:app", host=host, port=port, reload=reload, workers=workers
+        )
     else:
         pass
 
