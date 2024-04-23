@@ -1,0 +1,10 @@
+.venv
+.idea
+test.py
+*.env
+*.pyc
+*.pem
+*.key
+*.crt
+*.csr
+*.cert
