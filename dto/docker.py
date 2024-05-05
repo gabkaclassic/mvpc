@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List
 
 
 @dataclass
@@ -16,6 +17,8 @@ class Image:
     id: str
     labels: str
     tags: str
+    containers: List = None
+    history: List = None
 
     def json(self):
         return self.__dict__

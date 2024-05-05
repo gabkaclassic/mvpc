@@ -19,6 +19,16 @@ async def list_images():
     return {"data": content}
 
 
+@router.get("/image/{image_name}")
+async def get_image(image_name: str):
+    status, success, content = client.images.get_image(image_name=image_name, json=True)
+
+    if not success:
+        raise HTTPException(status_code=status, detail=content)
+
+    return {"data": content}
+
+
 @router.post("/image")
 async def create_image(
     dockerfile: Annotated[UploadFile, File()] = None,
