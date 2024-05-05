@@ -1,8 +1,5 @@
 from fastapi import FastAPI
+from .docker.containers import router as container_router
 
 app = FastAPI()
-
-
-@app.get("/")
-async def root():
-    return {"message": "Test message"}
+app.include_router(container_router)
