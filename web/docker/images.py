@@ -31,7 +31,7 @@ async def get_image(image_name: str):
 
 @router.post("/image")
 async def create_image(
-    dockerfile: Annotated[UploadFile, File()] = None,
+    # dockerfile: Annotated[UploadFile, File()] = None,
     path: Annotated[str, Form()] = None,
     tag: Annotated[str, Form()] = None,
 ):
@@ -39,12 +39,12 @@ async def create_image(
         status, success, content = client.images.build_image(
             path=path, tag=tag, json=True
         )
-    elif dockerfile:
-        file_content = await dockerfile.read()
-        with BytesIO(file_content) as file_stream:
-            status, success, content = client.images.build_image(
-                dockerfile=file_stream, tag=tag, json=True
-            )
+    # elif dockerfile:
+    #     file_content = await dockerfile.read()
+    #     with BytesIO(file_content) as file_stream:
+    #         status, success, content = client.images.build_image(
+    #             dockerfile=file_stream, tag=tag, json=True
+    #         )
     else:
         raise HTTPException(status_code=400, detail="Dockerfile or path required")
 
