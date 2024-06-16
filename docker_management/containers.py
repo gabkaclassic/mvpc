@@ -1,6 +1,6 @@
 from docker import DockerClient
 from docker.errors import ImageNotFound, NotFound, APIError
-from dto.docker import Container
+from dto.common.docker import Container
 from utils.singleton import Singleton
 
 

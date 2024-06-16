@@ -3,7 +3,7 @@ from io import BytesIO
 from docker import DockerClient
 from docker.errors import NotFound
 
-from dto.docker import Image, Container
+from dto.common.docker import Image, Container
 from utils.singleton import Singleton
 from utils.datetime_utils import int_to_date
 from typing import Dict

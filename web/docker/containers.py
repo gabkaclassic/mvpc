@@ -1,8 +1,7 @@
 from fastapi import APIRouter as Router, HTTPException
 from starlette.websockets import WebSocket
-
+from dto.controllers.container import CreateContainer, StopContainer, RemoveContainer
 from docker_management.docker_client import client
-from pydantic import BaseModel as Model
 
 router = Router()
 
@@ -70,11 +69,6 @@ async def execute_container_command(container_id: str, websocket: WebSocket):
         await websocket.close()
 
 
-class CreateContainer(Model):
-    name: str
-    image: str
-
-
 @router.post("/container")
 async def create_container(data: CreateContainer):
     value, success, details = client.containers.create_container(
@@ -87,11 +81,6 @@ async def create_container(data: CreateContainer):
     return {"data": value, "detail": details}
 
 
-class RemoveContainer(Model):
-    id: str
-    force: bool | None = False
-
-
 @router.delete("/container")
 async def delete_container(data: RemoveContainer):
     result, success, details = client.containers.remove_container(data.id, data.force)
@@ -100,10 +89,6 @@ async def delete_container(data: RemoveContainer):
         raise HTTPException(status_code=result, detail=details)
 
     return {"data": result, "detail": details} @ router.delete("/container")
-
-
-class StopContainer(Model):
-    id: str
 
 
 @router.post("/container/stop")
