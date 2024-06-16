@@ -5,7 +5,7 @@ from docker.errors import NotFound
 
 from dto.docker import Image, Container
 from utils.singleton import Singleton
-from utils.datetime_utils import int2date
+from utils.datetime_utils import int_to_date
 from typing import Dict
 
 
@@ -35,7 +35,7 @@ class Images(metaclass=Singleton):
         return self.client.containers.list(all=True, filters={"ancestor": image})
 
     def format_history(self, history: Dict):
-        history["Created"] = int2date(history["Created"], to_string=True)
+        history["Created"] = int_to_date(history["Created"], to_string=True)
         return history
 
     def get_image(self, image_name: str, json: bool = False, dto: bool = False):
