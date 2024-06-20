@@ -1,12 +1,17 @@
-from io import BytesIO
-
 from docker import DockerClient
 from docker.errors import NotFound
 
 from dto.common.docker import Image, Container
-from utils.singleton import Singleton
-from utils.datetime_utils import int_to_date
+from dto.controllers.image import Layer
+from utils.common.singleton import Singleton
+from utils.common.datetime_utils import int_to_date
+from utils.docker.dockerfile import create_dockerfile
 from typing import Dict
+from fastapi import UploadFile as File
+from os.path import join as path_join
+from pathlib import Path
+from uuid import uuid4
+from setup import docker_work_directory as work_directory
 
 
 class Images(metaclass=Singleton):
@@ -72,23 +77,41 @@ class Images(metaclass=Singleton):
             print(e)
             return 500, False, "Internal server error"
 
-    def build_image(
+    async def build_image(
         self,
-        path: str = "",
-        dockerfile: BytesIO = None,
+        super_image: str,
+        title: str,
         tag: str = "latest",
-        dto: bool = False,
+        layers: list[Layer] = None,
+        files: list[File] = None,
         json: bool = False,
+        dto: bool = False,
     ):
         try:
-            if path:
-                image, build_logs = self.client.images.build(path=path, tag=tag)
-            elif dockerfile:
-                image, build_logs = self.client.images.build(
-                    fileobj=dockerfile, tag=tag
-                )
-            else:
-                return 400, False, "Dockerfile or path required"
+
+            layers = layers or []
+            files = files or []
+
+            dockerfile_content = create_dockerfile(
+                super_image=super_image, layers=layers
+            )
+
+            build_directory = path_join(work_directory, str(uuid4())[-12:])
+            Path(build_directory).mkdir(exist_ok=True, parents=True)
+            dockerfile_path = path_join(build_directory, "Dockerfile")
+            with open(dockerfile_path, "w+") as dockerfile:
+                dockerfile.write(dockerfile_content)
+            for file in files:
+                file_path = path_join(build_directory, file.filename)
+                with open(file_path, "wb") as image_file:
+                    content = await file.read()
+                    image_file.write(content)
+
+            image, build_logs = self.client.images.build(
+                # target=title,
+                tag=f"{title}:{tag}",
+                path=build_directory,
+            )
 
             if dto:
                 image = Image(id=image.short_id, labels=image.labels, tags=image.tags)

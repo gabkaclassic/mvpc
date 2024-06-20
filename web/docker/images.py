@@ -1,6 +1,7 @@
-from fastapi import APIRouter as Router, HTTPException
-from dto.controllers.image import CreateImage, PullImage, RemoveImage
+from fastapi import APIRouter as Router, HTTPException, Depends
+from dto.controllers.image import CreateImage, PullImage, RemoveImage, Layer
 from docker_management.docker_client import client
+import json
 
 router = Router()
 
@@ -26,16 +27,26 @@ async def get_image(image_name: str):
 
 
 @router.post("/image")
-async def create_image(image_data: CreateImage):
-    if image_data:
-        status, success, content = client.images.build_image(
-            title=image_data.title,
-            tag=image_data.tag,
-            layers=image_data.layers,
-            files=image_data.files,
-        )
-    else:
-        raise HTTPException(status_code=400, detail="Image creation data is required")
+async def create_image(image_data: CreateImage = Depends(CreateImage.as_form)):
+    try:
+        parsed_layers = json.loads(image_data.layers)
+        layers_obj = [Layer(**layer) for layer in parsed_layers]
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON for layers")
+    except TypeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    if not image_data:
+        return HTTPException(status_code=400, detail="Image date is required")
+
+    status, success, content = await client.images.build_image(
+        super_image=image_data.super_image,
+        title=image_data.title,
+        tag=image_data.tag,
+        layers=layers_obj,
+        files=image_data.files,
+        json=True,
+    )
 
     if not success:
         raise HTTPException(status_code=status, detail=content)

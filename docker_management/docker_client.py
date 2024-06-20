@@ -1,5 +1,5 @@
 from docker import DockerClient
-from utils.singleton import Singleton
+from utils.common.singleton import Singleton
 from .containers import Containers
 from .images import Images
 

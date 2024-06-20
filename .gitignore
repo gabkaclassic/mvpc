@@ -9,3 +9,4 @@ test.py
 *.crt
 *.csr
 *.cert
+index.html

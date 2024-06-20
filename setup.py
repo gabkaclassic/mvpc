@@ -9,3 +9,6 @@ app_port = config.getint("app", "port")
 app_reload = config.getboolean("app", "reload")
 workers = config.getint("app", "workers")
 node_type = config.get("app", "node_type")
+
+# Docker builds configuration
+docker_work_directory = config.get("docker", "work_directory")
