@@ -1,6 +1,8 @@
-from pydantic import BaseModel as Model
-from fastapi import UploadFile as File, Form
 from enum import Enum
+
+from fastapi import Form
+from fastapi import UploadFile as File
+from pydantic import BaseModel as Model
 
 
 class DockerfileInstruction(Enum):
@@ -46,9 +48,7 @@ class CreateImage(Model):
         layers: str = Form(...),
         files: list[File] = File(...),
     ) -> "CreateImage":
-        return cls(
-            super_image=super_image, title=title, tag=tag, layers=layers, files=files
-        )
+        return cls(super_image=super_image, title=title, tag=tag, layers=layers, files=files)
 
 
 class PullImage(Model):

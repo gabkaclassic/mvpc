@@ -1,5 +1,6 @@
 from docker import DockerClient
-from docker.errors import ImageNotFound, NotFound, APIError
+from docker.errors import APIError, ImageNotFound, NotFound
+
 from dto.common.docker import Container
 from utils.common.singleton import Singleton
 
@@ -14,18 +15,12 @@ class Containers(metaclass=Singleton):
             containers = self.client.containers.list(all=True)
 
             if dto:
-                containers = [
-                    Container(id=c.short_id, name=c.name, status=c.status)
-                    for c in containers
-                ]
+                containers = [Container(id=c.short_id, name=c.name, status=c.status) for c in containers]
             elif json:
-                containers = [
-                    Container(id=c.short_id, name=c.name, status=c.status).json()
-                    for c in containers
-                ]
+                containers = [Container(id=c.short_id, name=c.name, status=c.status).json() for c in containers]
 
             return 200, True, containers
-        except Exception as e:
+        except Exception:
             return 500, False, "Internal server error"
 
     def get_container(self, container_id: str, json: bool = False, dto: bool = False):
@@ -33,18 +28,14 @@ class Containers(metaclass=Singleton):
             container = self.client.containers.get(container_id)
 
             if dto:
-                container = Container(
-                    id=container.short_id, name=container.name, status=container.status
-                )
+                container = Container(id=container.short_id, name=container.name, status=container.status)
             elif json:
-                container = Container(
-                    id=container.short_id, name=container.name, status=container.status
-                ).json()
+                container = Container(id=container.short_id, name=container.name, status=container.status).json()
 
             return 200, True, container
         except NotFound as e:
             return e.status_code, False, f"Container {container_id} not found"
-        except Exception as e:
+        except Exception:
             return 500, False, "Internal server error"
 
     def get_container_logs_stream(self, container_id: str):
@@ -60,14 +51,12 @@ class Containers(metaclass=Singleton):
             return 200, True, logs
         except NotFound as e:
             return e.status_code, False, f"Container {container_id} not found"
-        except Exception as e:
+        except Exception:
             return 500, False, "Internal server error"
 
     def create_container(self, name: str, image: str, json: bool = False):
         try:
-            created_container = self.client.containers.run(
-                name=name, image=image, detach=True
-            )
+            created_container = self.client.containers.run(name=name, image=image, detach=True)
             if json:
                 created_container = Container(
                     created_container.id,
@@ -83,11 +72,7 @@ class Containers(metaclass=Singleton):
             return (
                 status_code,
                 False,
-                (
-                    f"Invalid name: {name}"
-                    if status_code == 400
-                    else f"Container with name {name} already exists"
-                ),
+                (f"Invalid name: {name}" if status_code == 400 else f"Container with name {name} already exists"),
             )
 
     def execute_command(self, container_id: str, command: str):
@@ -113,9 +98,9 @@ class Containers(metaclass=Singleton):
 
             return 400, False, "Container remove operation must be forced"
 
-        except NotFound as e:
+        except NotFound:
             return 404, False, f"Container with id {id} not found"
-        except Exception as e:
+        except Exception:
             return 500, False, "Internal server error"
 
     def stop_container(self, id: str):
@@ -131,14 +116,10 @@ class Containers(metaclass=Singleton):
             return (
                 result,
                 True,
-                (
-                    "Container already stopped"
-                    if already_stopped
-                    else "Container successfully stopped"
-                ),
+                ("Container already stopped" if already_stopped else "Container successfully stopped"),
             )
 
-        except NotFound as e:
+        except NotFound:
             return 404, False, f"Container with id {id} not found"
-        except Exception as e:
+        except Exception:
             return 500, False, "Internal server error"

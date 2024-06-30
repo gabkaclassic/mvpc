@@ -1,17 +1,18 @@
-from docker import DockerClient
-from docker.errors import NotFound
-
-from dto.common.docker import Image, Container
-from dto.controllers.image import Layer
-from utils.common.singleton import Singleton
-from utils.common.datetime_utils import int_to_date
-from utils.docker.dockerfile import create_dockerfile
-from typing import Dict
-from fastapi import UploadFile as File
 from os.path import join as path_join
 from pathlib import Path
+from typing import Dict
 from uuid import uuid4
+
+from docker import DockerClient
+from docker.errors import NotFound
+from fastapi import UploadFile as File
+
+from dto.common.docker import Container, Image
+from dto.controllers.image import Layer
 from setup import docker_work_directory as work_directory
+from utils.common.datetime_utils import int_to_date
+from utils.common.singleton import Singleton
+from utils.docker.dockerfile import create_dockerfile
 
 
 class Images(metaclass=Singleton):
@@ -23,17 +24,12 @@ class Images(metaclass=Singleton):
         try:
             images = self.client.images.list()
             if dto:
-                images = [
-                    Image(id=i.short_id, labels=i.labels, tags=i.tags) for i in images
-                ]
+                images = [Image(id=i.short_id, labels=i.labels, tags=i.tags) for i in images]
             elif json:
-                images = [
-                    Image(id=i.short_id, labels=i.labels, tags=i.tags).json()
-                    for i in images
-                ]
+                images = [Image(id=i.short_id, labels=i.labels, tags=i.tags).json() for i in images]
 
             return 200, True, images
-        except Exception as e:
+        except Exception:
             return 500, False, "Internal server error"
 
     def get_image_containers(self, image: str):
@@ -49,9 +45,7 @@ class Images(metaclass=Singleton):
             history = list(map(self.format_history, image.history()))
             containers = self.get_image_containers(image_name)
             if dto:
-                containers = [
-                    Container(id=c.id, name=c.name, status=c.status) for c in containers
-                ]
+                containers = [Container(id=c.id, name=c.name, status=c.status) for c in containers]
                 image = Image(
                     id=image.short_id,
                     labels=image.labels,
@@ -60,10 +54,7 @@ class Images(metaclass=Singleton):
                     containers=containers,
                 )
             elif json:
-                containers = [
-                    Container(id=c.id, name=c.name, status=c.status).json()
-                    for c in containers
-                ]
+                containers = [Container(id=c.id, name=c.name, status=c.status).json() for c in containers]
                 image = Image(
                     id=image.short_id,
                     labels=image.labels,
@@ -92,9 +83,7 @@ class Images(metaclass=Singleton):
             layers = layers or []
             files = files or []
 
-            dockerfile_content = create_dockerfile(
-                super_image=super_image, layers=layers
-            )
+            dockerfile_content = create_dockerfile(super_image=super_image, layers=layers)
 
             build_directory = path_join(work_directory, str(uuid4())[-12:])
             Path(build_directory).mkdir(exist_ok=True, parents=True)
@@ -116,33 +105,27 @@ class Images(metaclass=Singleton):
             if dto:
                 image = Image(id=image.short_id, labels=image.labels, tags=image.tags)
             elif json:
-                image = Image(
-                    id=image.short_id, labels=image.labels, tags=image.tags
-                ).json()
+                image = Image(id=image.short_id, labels=image.labels, tags=image.tags).json()
 
             logs = "/n".join([l["stream"] for l in build_logs if "stream" in l])
             return 200, True, (image, logs)
-        except Exception as e:
+        except Exception:
             return 500, False, "Internal server error"
 
-    def pull_image(
-        self, repository: str, tag: str, dto: bool = False, json: bool = False
-    ):
+    def pull_image(self, repository: str, tag: str, dto: bool = False, json: bool = False):
         try:
             image = self.client.images.pull(repository=repository, tag=tag)
 
             if dto:
                 image = Image(id=image.short_id, labels=image.labels, tags=image.tags)
             elif json:
-                image = Image(
-                    id=image.short_id, labels=image.labels, tags=image.tags
-                ).json()
+                image = Image(id=image.short_id, labels=image.labels, tags=image.tags).json()
 
             return 200, True, image
 
         except NotFound as e:
             return e.status_code, False, "Image not found"
-        except Exception as e:
+        except Exception:
             return 500, False, "Internal server error"
 
     def remove_image(self, image: str, force: bool = False, pruned: bool = False):
@@ -151,5 +134,5 @@ class Images(metaclass=Singleton):
             return 200, True, "Success removing image"
         except NotFound as e:
             return e.status_code, False, "Image not found"
-        except Exception as e:
+        except Exception:
             return 500, False, "Internal server error"

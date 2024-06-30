@@ -1,7 +1,8 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from .docker.containers import router as container_router
 from .docker.images import router as image_router
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 

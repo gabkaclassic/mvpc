@@ -1,7 +1,9 @@
-from fastapi import APIRouter as Router, HTTPException
+from fastapi import APIRouter as Router
+from fastapi import HTTPException
 from starlette.websockets import WebSocket
-from dto.controllers.container import CreateContainer, StopContainer, RemoveContainer
-from docker_management.docker_client import client
+
+from core.docker.docker_client import client
+from dto.controllers.container import CreateContainer, RemoveContainer, StopContainer
 
 router = Router()
 
@@ -18,9 +20,7 @@ async def list_containers():
 
 @router.get("/container/{container_id}")
 async def get_container(container_id: str):
-    status, success, content = client.containers.get_container(
-        container_id=container_id, json=True
-    )
+    status, success, content = client.containers.get_container(container_id=container_id, json=True)
 
     if not success:
         raise HTTPException(status_code=status, detail=content)
@@ -43,12 +43,10 @@ async def get_container_logs_stream(container_id: str, websocket: WebSocket):
     try:
         await websocket.accept()
 
-        logs_generator = client.containers.get_container_logs_stream(
-            container_id=container_id
-        )
+        logs_generator = client.containers.get_container_logs_stream(container_id=container_id)
         for log_line in logs_generator:
             await websocket.send_text(log_line)
-    except Exception as e:
+    except Exception:
         await websocket.send_text("Internal Server Error")
     finally:
         await websocket.close()
@@ -63,7 +61,7 @@ async def execute_container_command(container_id: str, websocket: WebSocket):
             result_generator = client.containers.execute_command(container_id, command)
             for result_line in result_generator:
                 await websocket.send_text(result_line)
-    except Exception as e:
+    except Exception:
         await websocket.send_text("Internal Server Error")
     finally:
         await websocket.close()
@@ -71,9 +69,7 @@ async def execute_container_command(container_id: str, websocket: WebSocket):
 
 @router.post("/container")
 async def create_container(data: CreateContainer):
-    value, success, details = client.containers.create_container(
-        data.name, data.image, json=True
-    )
+    value, success, details = client.containers.create_container(data.name, data.image, json=True)
 
     if not success:
         raise HTTPException(status_code=value, detail=details)

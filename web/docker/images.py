@@ -1,7 +1,10 @@
-from fastapi import APIRouter as Router, HTTPException, Depends
-from dto.controllers.image import CreateImage, PullImage, RemoveImage, Layer
-from docker_management.docker_client import client
 import json
+
+from fastapi import APIRouter as Router
+from fastapi import Depends, HTTPException
+
+from core.docker import client
+from dto.controllers.image import CreateImage, Layer, PullImage, RemoveImage
 
 router = Router()
 
@@ -56,9 +59,7 @@ async def create_image(image_data: CreateImage = Depends(CreateImage.as_form)):
 
 @router.post("/image/pull")
 async def pull_image(data: PullImage):
-    status, success, content = client.images.pull_image(
-        repository=data.repository, tag=data.tag, json=True
-    )
+    status, success, content = client.images.pull_image(repository=data.repository, tag=data.tag, json=True)
 
     if not success:
         raise HTTPException(status_code=status, detail=content)
@@ -69,9 +70,7 @@ async def pull_image(data: PullImage):
 @router.delete("/image")
 async def remove_image(data: RemoveImage):
 
-    status, success, content = client.images.remove_image(
-        data.image, data.force, data.pruned
-    )
+    status, success, content = client.images.remove_image(data.image, data.force, data.pruned)
 
     if not success:
         raise HTTPException(status_code=status, detail=content)

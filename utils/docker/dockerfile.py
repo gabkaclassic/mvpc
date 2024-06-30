@@ -1,4 +1,4 @@
-from dto.controllers.image import Layer, DockerfileInstruction
+from dto.controllers.image import DockerfileInstruction, Layer
 
 
 def create_dockerfile(super_image: str, layers: list[Layer]) -> str:
