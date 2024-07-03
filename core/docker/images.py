@@ -1,6 +1,5 @@
 from os.path import join as path_join
 from pathlib import Path
-from typing import Dict
 from uuid import uuid4
 
 from docker import DockerClient
@@ -35,7 +34,7 @@ class Images(metaclass=Singleton):
     def get_image_containers(self, image: str):
         return self.client.containers.list(all=True, filters={"ancestor": image})
 
-    def format_history(self, history: Dict):
+    def format_history(self, history: dict):
         history["Created"] = int_to_date(history["Created"], to_string=True)
         return history
 

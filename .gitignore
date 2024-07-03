@@ -10,3 +10,5 @@ test.py
 *.csr
 *.cert
 index.html
+docker-compose.yml
+mongo-init.js

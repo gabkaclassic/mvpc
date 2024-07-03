@@ -1,30 +1,16 @@
-from typing import List
-
 from database.connection import client
 from database.entity import Entity
+from dto.common.docker import Image as ImageDTO
 
 
 class Image(Entity):
     collection = client.get_collection("images")
 
-    labels: str
-    tag: str
-    containers: List
-    history: List
+    def __init__(self, image: ImageDTO):
+        super().__init__(image)
 
-    def __init__(
-        self,
-        id: str = None,
-        labels: str = "",
-        tag: str = "",
-        containers: List = None,
-        history: List = None,
-    ):
-        super().__init__(id)
-        self.labels = labels
-        self.tag = tag
-        self.containers = containers or []
-        self.history = history or []
+        for k, v in image.__dict__.items():
+            self.__setattr__(k, v)
 
     def save(self):
         return self.collection.insert_one(self.__dict__)
